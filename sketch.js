@@ -1,15 +1,36 @@
 
 
-let gridSize = 7;
+let gridSize = 1;
+let gridMinSize = 7;
+let gridMaxSize = 21;
 let gridCellSize = 0;
+let shapePoints = 1;
+let pathLength = 200;
+let allowCrossing = false;
 
 let followPath = []
+let shapeGradient;
 
 function setup() {
 
-  angleMode(DEGREES);
   colorMode(HSB);
 
+  let backgroundColors = [
+    color(256, 67, 100, 100),
+    color(212, 72, 67, 100),
+    color(60, 100, 100, 100),
+    color(161, 97, 80, 100),
+    color(328, 24, 98, 100),
+    color(25, 9, 98, 100)
+  ]
+
+  let shapeGradients = [
+    { start: color(46, 0, 100, 100), end: color(46, 100, 0, 100) },
+    { start: color(60, 2, 99, 100), end: color(8, 75, 82, 100) },
+    { start: color(86, 25, 70, 100), end: color(184, 36, 55, 100) },
+    { start: color(53, 27, 86, 100), end: color(46, 25, 40, 100) },
+  ]
+  
   let canvasSize = 0;
 
   if (windowWidth < windowHeight) {
@@ -19,25 +40,43 @@ function setup() {
     canvasSize = windowHeight;
   }
 
+  gridSize = int(random(gridMinSize, gridMaxSize));
+  shapePoints = int(random(Math.ceil(15)));
+  pathLength = int(random(Math.ceil(pathLength / 4, pathLength)));
+  allowCrossing = false; //Math.random() < 0.5;
+  shapeGradientsIndex = int(random(shapeGradients.length));
+  shapeGradient = shapeGradients[shapeGradientsIndex];
+
+  pathLength *= gridSize / 2;
+
+  console.log('gridSize: ' + gridSize);
+  console.log('shapePoints: ' + shapePoints);
+  console.log('pathLength: ' + pathLength);
+  console.log('allowCrossing: ' + allowCrossing);
+  console.log('shapeGradient: ' + shapeGradient.start + ' ' + shapeGradient.end);
+
   createCanvas(canvasSize, canvasSize);
 
-  background(212, 72, 67);
-  
-  drawingContext.fillStyle = 'blue';
+  background(backgroundColors[int(random(backgroundColors.length))]);
+  if (shapeGradientsIndex === 0) {
+    background(0);
+  }  
 
   gridCellSize = width / gridSize;
 
   followPath = buildPath(
-    Math.floor(gridSize / 2), 
-    Math.floor(gridSize / 2), 
-    25, 
+    Math.floor(2, gridSize - 2), 
+    Math.floor(2, gridSize - 2), 
+    pathLength, 
     gridCellSize);
 
   noLoop();
+ 
 }
 
 function draw() {
 
+  noStroke();
 
   for (let i = 0; i < followPath.length; i++) { 
 
@@ -49,10 +88,9 @@ function draw() {
     
   }
 
-
 }
 
-let maxAttempts = 250;
+let maxAttempts = 1000;
 
 function buildPath(row, column, length, size) {
 
@@ -110,10 +148,18 @@ function buildPath(row, column, length, size) {
         // code block
     }
 
-    // check for overlap
-    var test = path.filter(item => item.row == newRow && item.column == newColumn);
+    if (attempt == maxAttempts / 2)
+    {
+      console.log(attempt);
+      allowCrossing = true
+    }
 
-    if (test.length == 0 && !(newColumn < 1 || newColumn >= gridSize - 1 || newRow < 1 || newRow >= gridSize - 1))
+    // check for overlap
+    if (!allowCrossing ) {
+      testCrossing = path.filter(item => item.row == newRow && item.column == newColumn).length === 0;
+    }
+
+    if (testCrossing && !(newColumn < 1 || newColumn >= gridSize - 1 || newRow < 1 || newRow >= gridSize - 1))
     {
       let pathSegment = new PathSegment(i, column, row, size, c1, c2);
       path.push(pathSegment);
@@ -142,12 +188,15 @@ function drawShape(centerX, centerY) {
   radialGradient(
     -radius / 2,  -radius / 2, 0,//Start pX, pY, start circle radius
     0, 0, radius,//End pX, pY, End circle radius
-    color(60, 2, 99, 100), //Start color
-    color(8, 75, 82, 100), //End color
+    shapeGradient.start, //Start color
+    shapeGradient.end, //End color
   );
 
-  ellipse(0, 0, radius);
-
+  if (shapePoints < 5) {
+    ellipse(0, 0, radius);
+  } else {
+    star(0, 0, radius, radius - radius / 2, shapePoints);
+  }
 
   pop();
 
@@ -178,6 +227,21 @@ function drawShape(centerX, centerY) {
 
   // }
 
+}
+
+function star(x, y, radius1, radius2, npoints) {
+  let angle = TWO_PI / npoints;
+  let halfAngle = angle / 2.0;
+  beginShape();
+  for (let a = 0; a < TWO_PI; a += angle) {
+    let sx = x + cos(a) * radius2;
+    let sy = y + sin(a) * radius2;
+    vertex(sx, sy);
+    sx = x + cos(a + halfAngle) * radius1;
+    sy = y + sin(a + halfAngle) * radius1;
+    vertex(sx, sy);
+  }
+  endShape(CLOSE);
 }
 
 function radialGradient(sX, sY, sR, eX, eY, eR, colorS, colorE){
