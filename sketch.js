@@ -5,6 +5,7 @@ let gridMinSize = 7;
 let gridMaxSize = 21;
 let gridCellSize = 0;
 let shapePoints = 1;
+let shapePointsDifference = 2;
 let pathLength = 200;
 let allowCrossing = false;
 
@@ -12,6 +13,7 @@ let followPath = []
 let shapeGradient;
 
 let animationFrame = 0;
+let animationEase = 0.99;
 
 function setup() {
 
@@ -27,7 +29,6 @@ function setup() {
   ]
 
   let shapeGradients = [
-    { steps: [ { position: 0, color: color(46, 0, 100, 100) }, { position: 1, color: color(46, 100, 0, 100)} ]},
     { steps: [ { position: 0, color: color(60, 2, 99, 100) }, { position: 1, color: color(8, 75, 82, 100)} ]},
     { steps: [ { position: 0, color: color(86, 25, 70, 100) }, { position: 1, color: color(184, 36, 55, 100)} ]},
     { steps: [ { position: 0, color: color(53, 27, 86, 100) }, { position: 1, color: color(46, 25, 40, 100)} ]},
@@ -53,6 +54,7 @@ function setup() {
 
   gridSize = int(random(gridMinSize, gridMaxSize));
   shapePoints = int(random(Math.ceil(15)));
+  shapePointsDifference = int(random(2, 5));
   pathLength = int(random(Math.ceil(pathLength / 4, pathLength)));
   allowCrossing = false; //Math.random() < 0.5;
   shapeGradientsIndex = int(random(shapeGradients.length));
@@ -60,8 +62,10 @@ function setup() {
 
   pathLength *= gridSize / 2;
 
+
   console.log('gridSize: ' + gridSize);
   console.log('shapePoints: ' + shapePoints);
+  console.log('shapePointsDifference: ' + shapePointsDifference);
   console.log('pathLength: ' + pathLength);
   console.log('allowCrossing: ' + allowCrossing);
   console.log('shapeGradient: ' + shapeGradient);
@@ -69,9 +73,6 @@ function setup() {
   createCanvas(canvasSize, canvasSize);
 
   background(backgroundColors[int(random(backgroundColors.length))]);
-  if (shapeGradientsIndex === 0) {
-    background(0);
-  }  
 
   gridCellSize = width / gridSize;
 
@@ -85,19 +86,22 @@ function setup() {
 
 }
 
+let animationStep = 1;
+
 function draw() {
 
   if (animationFrame < followPath.length) {
 
-    let points = followPath[animationFrame].draw();
+    let points = followPath[int(animationFrame)].draw();
 
     for (const point of points) {
       drawShape(point.x, point.y);
     }  
-    
-    animationFrame++;
-  }
 
+    animationStep *= animationEase;
+    
+    animationFrame += 1; //animationStep;
+  }
 
 }
 
@@ -204,7 +208,7 @@ function drawShape(centerX, centerY) {
   if (shapePoints < 5) {
     ellipse(0, 0, radius);
   } else {
-    star(0, 0, radius, radius - radius / 2, shapePoints);
+    star(0, 0, radius, radius - radius / shapePointsDifference, shapePoints);
   }
 
   pop();
