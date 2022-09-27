@@ -1,6 +1,6 @@
 
 
-let gridSize = 5;
+let gridSize = 7;
 let gridCellSize = 0;
 
 let followPath = []
@@ -10,8 +10,16 @@ function setup() {
   angleMode(DEGREES);
   colorMode(HSB);
 
-  createCanvas(400, 400);
+  let canvasSize = 0;
 
+  if (windowWidth < windowHeight) {
+    canvasSize = windowWidth;
+  }
+  else {
+    canvasSize = windowHeight;
+  }
+
+  createCanvas(canvasSize, canvasSize);
 
   background(212, 72, 67);
   
@@ -105,7 +113,7 @@ function buildPath(row, column, length, size) {
     // check for overlap
     var test = path.filter(item => item.row == newRow && item.column == newColumn);
 
-    if (test.length == 0 && !(newColumn < 0 || newColumn >= gridSize || newRow < 0 || newRow >= gridSize))
+    if (test.length == 0 && !(newColumn < 1 || newColumn >= gridSize - 1 || newRow < 1 || newRow >= gridSize - 1))
     {
       let pathSegment = new PathSegment(i, column, row, size, c1, c2);
       path.push(pathSegment);
