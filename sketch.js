@@ -11,6 +11,8 @@ let allowCrossing = false;
 let followPath = []
 let shapeGradient;
 
+let animationFrame = 0;
+
 function setup() {
 
   colorMode(HSB);
@@ -25,10 +27,19 @@ function setup() {
   ]
 
   let shapeGradients = [
-    { start: color(46, 0, 100, 100), end: color(46, 100, 0, 100) },
-    { start: color(60, 2, 99, 100), end: color(8, 75, 82, 100) },
-    { start: color(86, 25, 70, 100), end: color(184, 36, 55, 100) },
-    { start: color(53, 27, 86, 100), end: color(46, 25, 40, 100) },
+    { steps: [ { position: 0, color: color(46, 0, 100, 100) }, { position: 1, color: color(46, 100, 0, 100)} ]},
+    { steps: [ { position: 0, color: color(60, 2, 99, 100) }, { position: 1, color: color(8, 75, 82, 100)} ]},
+    { steps: [ { position: 0, color: color(86, 25, 70, 100) }, { position: 1, color: color(184, 36, 55, 100)} ]},
+    { steps: [ { position: 0, color: color(53, 27, 86, 100) }, { position: 1, color: color(46, 25, 40, 100)} ]},
+    { steps: [ 
+      { position: 0, color: color(203, 59, 74, 100) }, 
+      { position: 0.1, color: color(135, 83, 48, 100) }, 
+      { position: 0.2, color: color(20, 86, 73, 100) }, 
+      { position: 0.3, color: color(203, 59, 74, 100) }, 
+      { position: 0.4, color: color(135, 83, 48, 100) }, 
+      { position: 0.5, color: color(335, 17, 79, 100) },  
+      { position: 1, color: color(203, 59, 74, 100) } 
+      ]},
   ]
   
   let canvasSize = 0;
@@ -53,7 +64,7 @@ function setup() {
   console.log('shapePoints: ' + shapePoints);
   console.log('pathLength: ' + pathLength);
   console.log('allowCrossing: ' + allowCrossing);
-  console.log('shapeGradient: ' + shapeGradient.start + ' ' + shapeGradient.end);
+  console.log('shapeGradient: ' + shapeGradient);
 
   createCanvas(canvasSize, canvasSize);
 
@@ -70,23 +81,23 @@ function setup() {
     pathLength, 
     gridCellSize);
 
-  noLoop();
- 
+  noStroke();
+
 }
 
 function draw() {
 
-  noStroke();
+  if (animationFrame < followPath.length) {
 
-  for (let i = 0; i < followPath.length; i++) { 
-
-    let points = followPath[i].draw();
+    let points = followPath[animationFrame].draw();
 
     for (const point of points) {
       drawShape(point.x, point.y);
-    }
+    }  
     
+    animationFrame++;
   }
+
 
 }
 
@@ -150,7 +161,6 @@ function buildPath(row, column, length, size) {
 
     if (attempt == maxAttempts / 2)
     {
-      console.log(attempt);
       allowCrossing = true
     }
 
@@ -188,8 +198,7 @@ function drawShape(centerX, centerY) {
   radialGradient(
     -radius / 2,  -radius / 2, 0,//Start pX, pY, start circle radius
     0, 0, radius,//End pX, pY, End circle radius
-    shapeGradient.start, //Start color
-    shapeGradient.end, //End color
+    shapeGradient.steps
   );
 
   if (shapePoints < 5) {
@@ -244,17 +253,19 @@ function star(x, y, radius1, radius2, npoints) {
   endShape(CLOSE);
 }
 
-function radialGradient(sX, sY, sR, eX, eY, eR, colorS, colorE){
+function radialGradient(sX, sY, sR, eX, eY, eR, steps){
 
   let gradient = drawingContext.createRadialGradient(
     sX, sY, sR, eX, eY, eR
   );
-  gradient.addColorStop(0, colorS);
-  gradient.addColorStop(1, colorE);
+
+  for (let i = 0; i < steps.length; i++) {
+    gradient.addColorStop(steps[i].position, steps[i].color);
+  }
 
   drawingContext.fillStyle = gradient;
 }
-
+ 
 function linearGradient(sX, sY, eX, eY, colorS, colorE){
   let gradient = drawingContext.createLinearGradient(
     sX, sY, eX, eY
