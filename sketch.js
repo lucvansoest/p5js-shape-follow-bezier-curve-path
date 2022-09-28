@@ -29,10 +29,10 @@ function setup() {
   ]
 
   let shapeGradients = [
-    { steps: [ { position: 0, color: color(60, 2, 99, 100) }, { position: 1, color: color(8, 75, 82, 100)} ]},
-    { steps: [ { position: 0, color: color(86, 25, 70, 100) }, { position: 1, color: color(184, 36, 55, 100)} ]},
-    { steps: [ { position: 0, color: color(53, 27, 86, 100) }, { position: 1, color: color(46, 25, 40, 100)} ]},
-    { steps: [ 
+    { circleAngle: PI + (PI / 4), circlePosition: 0.75, rotate: 0, steps: [ { position: 0, color: color(60, 2, 99, 100) }, { position: 1, color: color(8, 75, 82, 100)} ]},
+    { circleAngle: PI + (PI / 4), circlePosition: 0.75, rotate: 0, steps: [ { position: 0, color: color(86, 25, 70, 100) }, { position: 1, color: color(184, 36, 55, 100)} ]},
+    { circleAngle: PI + (PI / 4), circlePosition: 0.75, rotate: 0, steps: [ { position: 0, color: color(53, 27, 86, 100) }, { position: 1, color: color(46, 25, 40, 100)} ]},
+    { circleAngle: PI + (PI / 4), circlePosition: 1, rotate: TWO_PI, steps: [ 
       { position: 0, color: color(203, 59, 74, 100) }, 
       { position: 0.1, color: color(135, 83, 48, 100) }, 
       { position: 0.2, color: color(20, 86, 73, 100) }, 
@@ -90,17 +90,25 @@ let animationStep = 1;
 
 function draw() {
 
+  console.log('draw');
+
   if (animationFrame < followPath.length) {
 
     let points = followPath[int(animationFrame)].draw();
 
     for (const point of points) {
-      drawShape(point.x, point.y);
+      drawShape(point.x, point.y, animationFrame);
     }  
 
     animationStep *= animationEase;
     
+console.log(animationFrame)
+
     animationFrame += 1; //animationStep;
+  }
+  else {
+    // finish animation
+    noLoop();
   }
 
 }
@@ -188,7 +196,7 @@ function buildPath(row, column, length, size) {
   return path;
 }
 
-function drawShape(centerX, centerY) {
+function drawShape(centerX, centerY, animationFrameIndex) {
 
   let radius = gridCellSize;
 
@@ -199,9 +207,26 @@ function drawShape(centerX, centerY) {
   push();
   translate(centerX, centerY);
 
+  let circle1Radius = radius * shapeGradient.circlePosition;
+
+  let x1 = circle1Radius * sin(shapeGradient.circleAngle);
+  let y1 = circle1Radius * cos(shapeGradient.circleAngle);
+  let x2 = 0;
+  let y2 = 0;
+
+  if (shapeGradient.rotate > 0) {
+
+    let angle = map(animationFrameIndex, 0, followPath.length, shapeGradient.circleAngle, shapeGradient.rotate);
+
+    //convert polar coordinates to cartesian coordinates
+    x1 = circle1Radius * sin(angle);
+    y1 = circle1Radius * cos(angle);
+
+  }
+
   radialGradient(
-    -radius / 2,  -radius / 2, 0,//Start pX, pY, start circle radius
-    0, 0, radius,//End pX, pY, End circle radius
+    x1,  y1, 0,
+    x2,  y2, radius,
     shapeGradient.steps
   );
 
